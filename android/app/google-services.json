@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "929226034837",
+    "project_id": "vulnera-e8848",
+    "storage_bucket": "vulnera-e8848.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929226034837:android:89a4d35f32f4e8d2c4159c",
+        "android_client_info": {
+          "package_name": "com.vulnera.vulnera"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD01KIjkE7wG_zOyOAz3XhpDL4bzdfWrUQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
