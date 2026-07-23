@@ -39,14 +39,19 @@ class _AddEditAssetScreenState extends State<AddEditAssetScreen> {
     }
   }
 
+  String? _formError;
+
   void _handleSave() async {
-    // don't save if the name field is empty
     if (_nameController.text.trim().isEmpty) {
+      setState(() {
+        _formError = 'Asset name is required.';
+      });
       return;
     }
 
     setState(() {
       _isSaving = true;
+      _formError = null;
     });
 
     if (widget.existingAsset == null) {
@@ -93,13 +98,18 @@ class _AddEditAssetScreenState extends State<AddEditAssetScreen> {
                 });
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            if (_formError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Text(_formError!, style: const TextStyle(color: Colors.red)),
+              ),
             _isSaving
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
-              onPressed: _handleSave,
-              child: Text(isEditing ? 'Save Changes' : 'Add Asset'),
-            ),
+                    onPressed: _handleSave,
+                    child: Text(isEditing ? 'Save Changes' : 'Add Asset'),
+                  ),
           ],
         ),
       ),
