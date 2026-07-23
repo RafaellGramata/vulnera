@@ -50,3 +50,5 @@ app.*.map.json
 **/captures/
 **/.externalNativeBuild/
 **/.cxx/
+
+lib/api_keys.dart

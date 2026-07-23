@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../api_keys.dart';
 
 // this class holds the pieces of cve data we care about,
 // separate from our Vulnerability model since this is raw data from NVD
@@ -21,7 +22,7 @@ class CveService {
 
   // if we got an api key from nvd, paste it here between the quotes
   // leave it empty ('') if we don't have one yet
-  static const String _apiKey = '';
+  static const String _apiKey = nvdApiKey;
 
   // looks up a single cve by id, like "CVE-2021-44228"
   // returns null if it wasn't found or something went wrong
@@ -36,10 +37,16 @@ class CveService {
       headers['apiKey'] = _apiKey;
     }
 
+    // temporary debug lines
+    print('Requesting URL: $url');
+    print('API key length: ${_apiKey.length}');
+    print('Headers: $headers');
+
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode != 200) {
-      // something went wrong - could be a bad cve id, rate limit, or network issue
+      // temporary debug line - tells us exactly what went wrong
+      print('NVD lookup failed. Status: ${response.statusCode}, Body: ${response.body}');
       return null;
     }
 
