@@ -16,6 +16,12 @@ class CveResult {
   });
 }
 
+// distinguishes why a lookup failed, so the ui can show an accurate message
+class CveLookupException implements Exception {
+  final String reason; // 'network' or 'notFound'
+  CveLookupException(this.reason);
+}
+
 class CveService {
   static const String _baseUrl =
       'https://services.nvd.nist.gov/rest/json/cves/2.0';
@@ -26,7 +32,7 @@ class CveService {
 
   // looks up a single cve by id, like "CVE-2021-44228"
   // returns null if it wasn't found or something went wrong
-  Future<CveResult?> lookupCve(String cveId) async {
+  Future<CveResult> lookupCve(String cveId) async {
     final trimmedId = cveId.trim().toUpperCase();
 
     final url = Uri.parse('$_baseUrl?cveId=$trimmedId');
@@ -42,12 +48,20 @@ class CveService {
     print('API key length: ${_apiKey.length}');
     print('Headers: $headers');
 
-    final response = await http.get(url, headers: headers);
+    http.Response response;
+    try {
+      response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
+    } catch (e) {
+      // covers no internet connection, dns failure, or a timeout -
+      // this is a network problem, not "the cve doesn't exist"
+      throw CveLookupException('network');
+    }
 
     if (response.statusCode != 200) {
-      // temporary debug line - tells us exactly what went wrong
-      print('NVD lookup failed. Status: ${response.statusCode}, Body: ${response.body}');
-      return null;
+      // a 404 genuinely means nvd doesn't have this cve id
+      throw CveLookupException('notFound');
     }
 
     final data = jsonDecode(response.body);
@@ -55,7 +69,7 @@ class CveService {
 
     if (vulnerabilities.isEmpty) {
       // the cve id doesn't exist in nvd's database
-      return null;
+      throw CveLookupException('notFound');
     }
 
     final cve = vulnerabilities[0]['cve'];
