@@ -5,11 +5,13 @@ import '../api_keys.dart';
 // this class holds the pieces of cve data we care about,
 // separate from our Vulnerability model since this is raw data from NVD
 class CveResult {
+  final String id;
   final String description;
   final double cvssScore;
   final String severity;
 
   CveResult({
+    required this.id,
     required this.description,
     required this.cvssScore,
     required this.severity,
@@ -106,10 +108,74 @@ class CveService {
     // so we just leave it at the defaults (0.0, Low)
 
     return CveResult(
+      id: cve['id'],
       description: englishDescription['value'],
       cvssScore: cvssScore,
       severity: severity,
     );
+  }
+
+  // searches nvd by keyword instead of an exact cve id, returning
+  // up to 10 matching results so the user can pick the right one
+  Future<List<CveResult>> searchByKeyword(String keyword) async {
+    final url = Uri.parse(
+      '$_baseUrl?keywordSearch=${Uri.encodeComponent(keyword.trim())}&resultsPerPage=10',
+    );
+
+    final headers = <String, String>{};
+    if (_apiKey.isNotEmpty) {
+      headers['apiKey'] = _apiKey;
+    }
+
+    http.Response response;
+    try {
+      response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+    } catch (e) {
+      throw CveLookupException('network');
+    }
+
+    if (response.statusCode != 200) {
+      throw CveLookupException('notFound');
+    }
+
+    final data = jsonDecode(response.body);
+    final vulnerabilities = data['vulnerabilities'] as List;
+
+    // reuse the same parsing logic as a single lookup, for each result
+    return vulnerabilities.map((item) {
+      final cve = item['cve'];
+
+      final descriptions = cve['descriptions'] as List;
+      final englishDescription = descriptions.firstWhere(
+        (d) => d['lang'] == 'en',
+        orElse: () => {'value': 'No description available.'},
+      );
+
+      double cvssScore = 0.0;
+      String severity = 'Low';
+      final metrics = cve['metrics'] as Map<String, dynamic>? ?? {};
+
+      if (metrics.containsKey('cvssMetricV31')) {
+        final cvssData = metrics['cvssMetricV31'][0]['cvssData'];
+        cvssScore = (cvssData['baseScore'] ?? 0).toDouble();
+        severity = _capitalizeSeverity(cvssData['baseSeverity']);
+      } else if (metrics.containsKey('cvssMetricV30')) {
+        final cvssData = metrics['cvssMetricV30'][0]['cvssData'];
+        cvssScore = (cvssData['baseScore'] ?? 0).toDouble();
+        severity = _capitalizeSeverity(cvssData['baseSeverity']);
+      } else if (metrics.containsKey('cvssMetricV2')) {
+        final cvssData = metrics['cvssMetricV2'][0]['cvssData'];
+        cvssScore = (cvssData['baseScore'] ?? 0).toDouble();
+        severity = _estimateSeverityFromScore(cvssScore);
+      }
+
+      return CveResult(
+        id: cve['id'],
+        description: englishDescription['value'],
+        cvssScore: cvssScore,
+        severity: severity,
+      );
+    }).toList();
   }
 
   // nvd returns severity in all caps, like "CRITICAL" - we just clean that up
