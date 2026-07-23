@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // this file comes from flutterfire configure
-import 'screens/login_screen.dart';
+import 'screens/auth_gate.dart';
 
 void main() async {
   // this line is needed before using any firebase feature
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ProjectNameABC',
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: const AuthGate(),
     );
   }
 }
