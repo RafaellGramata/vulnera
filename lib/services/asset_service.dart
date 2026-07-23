@@ -43,9 +43,27 @@ class AssetService {
     });
   }
 
-  // deletes an asset from firestore
+// deletes an asset from firestore, along with all of its vulnerabilities
+  // so we never leave orphaned data behind
   Future<void> deleteAsset(String assetId) async {
-    await _assetsRef.doc(assetId).delete();
+    // find every vulnerability that belongs to this asset
+    final vulnSnapshot = await FirebaseFirestore.instance
+        .collection('vulnerabilities')
+        .where('assetId', isEqualTo: assetId)
+        .get();
+
+    // batch deletes everything together as one atomic operation -
+    // either all of it succeeds, or none of it does, so we never end up
+    // with the asset gone but some vulnerabilities left behind (or vice versa)
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in vulnSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    batch.delete(_assetsRef.doc(assetId));
+
+    await batch.commit();
   }
 
   // gives us a live stream of one specific asset, so the screen updates
