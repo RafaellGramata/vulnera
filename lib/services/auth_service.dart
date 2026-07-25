@@ -15,12 +15,14 @@ class AuthService {
       // every new user gets a profile document in firestore,
       // storing their role - defaults to 'Analyst' since that's
       // a reasonable middle-ground for a new team member
+      // new accounts start as viewer (least privilege) - an admin must
+      // manually promote them once they're confirmed to be a real team member
       await FirebaseFirestore.instance
           .collection('users')
           .doc(credential.user!.uid)
           .set({
         'email': email,
-        'role': 'Analyst',
+        'role': 'Viewer',
         'createdAt': Timestamp.now(),
       });
 

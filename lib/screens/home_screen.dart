@@ -5,6 +5,7 @@ import '../models/asset.dart';
 import 'login_screen.dart';
 import 'add_edit_asset_screen.dart';
 import 'asset_detail_screen.dart';
+import 'manage_users_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String role;
@@ -21,6 +22,18 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Vulnera'),
         actions: [
+          // only admins see this - lets them promote/demote other users
+          if (role == 'Admin')
+            IconButton(
+              icon: const Icon(Icons.manage_accounts),
+              tooltip: 'Manage Users',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ManageUsersScreen()),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
