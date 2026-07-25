@@ -33,7 +33,12 @@ class UserService {
   // updates a specific user's role - firestore rules only allow
   // this to actually succeed if the caller is an admin
   Future<void> updateUserRole(String uid, String newRole) async {
+    // grab the user's email first so the event log can name them specifically
+    final userDoc = await _usersRef.doc(uid).get();
+    final userData = userDoc.data() as Map<String, dynamic>?;
+    final targetEmail = userData?['email'] ?? 'a user';
+
     await _usersRef.doc(uid).update({'role': newRole});
-    await _eventService.logEvent('changed a user\'s role to $newRole');
+    await _eventService.logEvent('changed $targetEmail\'s role to $newRole');
   }
 }
