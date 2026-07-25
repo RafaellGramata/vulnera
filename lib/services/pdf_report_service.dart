@@ -1,8 +1,10 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/asset.dart';
 import '../models/vulnerability.dart';
+import '../models/app_event.dart';
 import 'asset_service.dart';
 import 'vulnerability_service.dart';
 
@@ -10,7 +12,6 @@ class PdfReportService {
   final AssetService _assetService = AssetService();
   final VulnerabilityService _vulnService = VulnerabilityService();
 
-  // maps severity text to a pdf-compatible color, matching the app's chart colors
   PdfColor _severityColor(String severity) {
     switch (severity) {
       case 'Critical':
@@ -24,23 +25,41 @@ class PdfReportService {
     }
   }
 
-  // builds the full pdf document and returns the raw bytes,
-  // which the calling screen can then share, save, or print
+  // looks up every admin/analyst's email once, so we can label
+  // assignees by name instead of a raw uid throughout the report
+  Future<Map<String, String>> _getUserEmailMap() async {
+    final snapshot = await FirebaseFirestore.instance.collection('users').get();
+    final map = <String, String>{};
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      map[doc.id] = data['email'] ?? 'Unknown';
+    }
+    return map;
+  }
+
+  // grabs the most recent events for a short activity summary section
+  Future<List<AppEvent>> _getRecentEvents() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('events')
+        .orderBy('timestamp', descending: true)
+        .limit(10)
+        .get();
+    return snapshot.docs.map((doc) => AppEvent.fromFirestore(doc)).toList();
+  }
+
   Future<List<int>> generateReport() async {
     final pdf = pw.Document();
 
-    // grab a one-time snapshot of assets (not a live stream, since a pdf is a fixed snapshot in time)
     final assets = await _assetService.getAssets().first;
+    final userEmails = await _getUserEmailMap();
+    final recentEvents = await _getRecentEvents();
 
-    // for each asset, grab its vulnerabilities too
     final Map<String, List<Vulnerability>> vulnsByAsset = {};
     for (final asset in assets) {
-      final vulns =
-          await _vulnService.getVulnerabilitiesForAsset(asset.id).first;
+      final vulns = await _vulnService.getVulnerabilitiesForAsset(asset.id).first;
       vulnsByAsset[asset.id] = vulns;
     }
 
-    // calculate overall severity counts across all open vulnerabilities, for the summary section
     final severityCounts = {'Critical': 0, 'High': 0, 'Medium': 0, 'Low': 0};
     int totalOpen = 0;
     for (final vulns in vulnsByAsset.values) {
@@ -57,10 +76,16 @@ class PdfReportService {
         '${generatedDate.month}/${generatedDate.day}/${generatedDate.year} '
         '${generatedDate.hour}:${generatedDate.minute.toString().padLeft(2, '0')}';
 
+    // small helper so both the table and future references format an
+    // assignee's name consistently, falling back cleanly when unassigned
+    String assigneeLabel(String? uid) {
+      if (uid == null) return 'Unassigned';
+      return userEmails[uid] ?? 'Unknown';
+    }
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        // this runs on every page, so the header repeats automatically on page breaks
         header: (context) {
           if (context.pageNumber == 1) {
             return pw.Column(
@@ -118,11 +143,7 @@ class PdfReportService {
                       padding: const pw.EdgeInsets.all(6),
                       child: pw.Row(
                         children: [
-                          pw.Container(
-                            width: 10,
-                            height: 10,
-                            color: _severityColor(entry.key),
-                          ),
+                          pw.Container(width: 10, height: 10, color: _severityColor(entry.key)),
                           pw.SizedBox(width: 6),
                           pw.Text(entry.key),
                         ],
@@ -139,6 +160,28 @@ class PdfReportService {
           ),
           pw.SizedBox(height: 24),
 
+          // recent activity summary - gives the report context, not just a snapshot
+          pw.Text('Recent Activity', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 8),
+          if (recentEvents.isEmpty)
+            pw.Text('No recent activity recorded.', style: const pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic))
+          else
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: recentEvents.map((event) {
+                final dateStr =
+                    '${event.timestamp.month}/${event.timestamp.day} ${event.timestamp.hour}:${event.timestamp.minute.toString().padLeft(2, '0')}';
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 4),
+                  child: pw.Text(
+                    '$dateStr — ${event.actorEmail} ${event.message}',
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                );
+              }).toList(),
+            ),
+          pw.SizedBox(height: 24),
+
           // per-asset breakdown
           pw.Text('Asset Details', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 12),
@@ -151,10 +194,7 @@ class PdfReportService {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(
-                    asset.name,
-                    style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-                  ),
+                  pw.Text(asset.name, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
                   pw.Text(
                     '${asset.type} · Risk Score: ${asset.riskScore.toStringAsFixed(1)} · ${asset.openIssueCount} open issue(s)',
                     style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
@@ -170,15 +210,16 @@ class PdfReportService {
                     pw.Table(
                       border: pw.TableBorder.all(color: PdfColors.grey400),
                       columnWidths: const {
-                        0: pw.FlexColumnWidth(3),
-                        1: pw.FlexColumnWidth(1.5),
-                        2: pw.FlexColumnWidth(1),
-                        3: pw.FlexColumnWidth(1.5),
+                        0: pw.FlexColumnWidth(2.5),
+                        1: pw.FlexColumnWidth(1.3),
+                        2: pw.FlexColumnWidth(0.8),
+                        3: pw.FlexColumnWidth(1.3),
+                        4: pw.FlexColumnWidth(1.8),
                       },
                       children: [
                         pw.TableRow(
                           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                          children: ['Title', 'Severity', 'CVSS', 'Status']
+                          children: ['Title', 'Severity', 'CVSS', 'Status', 'Assigned To']
                               .map((h) => pw.Padding(
                                     padding: const pw.EdgeInsets.all(5),
                                     child: pw.Text(h, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
@@ -194,10 +235,8 @@ class PdfReportService {
                               ),
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
-                                child: pw.Text(
-                                  v.severity,
-                                  style: pw.TextStyle(fontSize: 10, color: _severityColor(v.severity)),
-                                ),
+                                child: pw.Text(v.severity,
+                                    style: pw.TextStyle(fontSize: 10, color: _severityColor(v.severity))),
                               ),
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
@@ -206,6 +245,10 @@ class PdfReportService {
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
                                 child: pw.Text(v.status, style: const pw.TextStyle(fontSize: 10)),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(5),
+                                child: pw.Text(assigneeLabel(v.assignedTo), style: const pw.TextStyle(fontSize: 9)),
                               ),
                             ],
                           );
