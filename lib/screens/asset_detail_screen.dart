@@ -143,6 +143,7 @@ class AssetDetailScreen extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => AddEditVulnerabilityScreen(
                                 assetId: asset.id,
+                                role: role,
                                 existingVulnerability: vuln,
                               ),
                             ),
@@ -165,7 +166,7 @@ class AssetDetailScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        AddEditVulnerabilityScreen(assetId: asset.id),
+                        AddEditVulnerabilityScreen(assetId: asset.id, role: role),
                   ),
                 );
               },
