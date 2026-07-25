@@ -6,6 +6,7 @@ import 'login_screen.dart';
 import 'add_edit_asset_screen.dart';
 import 'asset_detail_screen.dart';
 import 'manage_users_screen.dart';
+import 'notification_bell.dart';
 
 class HomeScreen extends StatelessWidget {
   final String role;
@@ -22,6 +23,7 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Vulnera'),
         actions: [
+          NotificationBell(role: role),
           // only admins see this - lets them promote/demote other users
           if (role == 'Admin')
             IconButton(
