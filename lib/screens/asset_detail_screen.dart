@@ -132,7 +132,11 @@ class AssetDetailScreen extends StatelessWidget {
                           ),
                         ),
                         title: Text(vuln.title),
-                        subtitle: Text('${vuln.severity} · ${vuln.status}'),
+                        subtitle: Text(
+                          vuln.assignedTo != null
+                              ? '${vuln.severity} · ${vuln.status} · Assigned'
+                              : '${vuln.severity} · ${vuln.status} · Unassigned',
+                        ),
                         onTap: () {
                           Navigator.push(
                             context,
