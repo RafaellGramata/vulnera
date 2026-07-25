@@ -7,12 +7,15 @@ import 'add_edit_asset_screen.dart';
 import 'asset_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final String role;
+  const HomeScreen({super.key, required this.role});
 
   @override
   Widget build(BuildContext context) {
     final authService = AuthService();
     final assetService = AssetService();
+    final canEdit = role == 'Admin' || role == 'Analyst';
+    final canDelete = role == 'Admin';
 
     return Scaffold(
       appBar: AppBar(
@@ -51,10 +54,12 @@ class HomeScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final asset = assets[index];
 
-              // dismissible lets us swipe the item left to delete it
+              // dismissible lets us swipe the item left to delete it -
+              // only admins are allowed to delete, so we disable the swipe
+              // direction entirely for everyone else
               return Dismissible(
                 key: Key(asset.id),
-                direction: DismissDirection.endToStart,
+                direction: canDelete ? DismissDirection.endToStart : DismissDirection.none,
                 background: Container(
                   color: Colors.red,
                   alignment: Alignment.centerRight,
@@ -74,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AssetDetailScreen(asset: asset),
+                        builder: (context) => AssetDetailScreen(asset: asset, role: role),
                       ),
                     );
                   },
@@ -84,15 +89,18 @@ class HomeScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddEditAssetScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+      // only admins and analysts can add new assets - viewers don't see this button at all
+      floatingActionButton: canEdit
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddEditAssetScreen()),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

@@ -8,8 +8,9 @@ import '../services/asset_service.dart';
 
 class AssetDetailScreen extends StatelessWidget {
   final Asset asset;
+  final String role;
 
-  const AssetDetailScreen({super.key, required this.asset});
+  const AssetDetailScreen({super.key, required this.asset, required this.role});
 
   // gives each severity level a color, so the list is easier to scan visually
   Color _severityColor(String severity) {
@@ -29,23 +30,26 @@ class AssetDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vulnService = VulnerabilityService();
     final assetService = AssetService();
+    final canEdit = role == 'Admin' || role == 'Analyst';
+    final canDelete = role == 'Admin';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(asset.name),
         actions: [
-          // edit icon opens the asset edit form, separate from tapping into vulnerabilities
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddEditAssetScreen(existingAsset: asset),
-                ),
-              );
-            },
-          ),
+          // edit icon opens the asset edit form - only admins and analysts see it
+          if (canEdit)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEditAssetScreen(existingAsset: asset),
+                  ),
+                );
+              },
+            ),
         ],
       ),
       body: Column(
@@ -105,7 +109,8 @@ class AssetDetailScreen extends StatelessWidget {
 
                     return Dismissible(
                       key: Key(vuln.id),
-                      direction: DismissDirection.endToStart,
+                      // only admins can delete - everyone else can't swipe this at all
+                      direction: canDelete ? DismissDirection.endToStart : DismissDirection.none,
                       background: Container(
                         color: Colors.red,
                         alignment: Alignment.centerRight,
@@ -148,18 +153,21 @@ class AssetDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  AddEditVulnerabilityScreen(assetId: asset.id),
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+      // only admins and analysts can add new vulnerabilities
+      floatingActionButton: canEdit
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddEditVulnerabilityScreen(assetId: asset.id),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
