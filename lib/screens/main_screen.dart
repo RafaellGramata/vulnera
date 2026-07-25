@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'dashboard_screen.dart';
 import '../services/user_service.dart';
 import '../models/app_user.dart';
+import 'activity_feed_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -46,6 +47,7 @@ class _MainTabsState extends State<_MainTabs> {
     final screens = [
       HomeScreen(role: widget.role),
       const DashboardScreen(),
+      const ActivityFeedScreen(),
     ];
 
     return Scaffold(
@@ -63,6 +65,7 @@ class _MainTabsState extends State<_MainTabs> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.devices), label: 'Assets'),
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Activity'),
         ],
       ),
     );

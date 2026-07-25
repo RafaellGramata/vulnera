@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/asset.dart';
+import 'event_service.dart';
 
 class AssetService {
+  final EventService _eventService = EventService();
   // this points at the "assets" collection in firestore
   final CollectionReference _assetsRef =
   FirebaseFirestore.instance.collection('assets');
@@ -31,6 +33,8 @@ class AssetService {
       'openIssueCount': 0,
       'createdAt': Timestamp.now(),
     });
+
+    await _eventService.logEvent('added a new asset: "$name"');
   }
 
   // updates an existing asset's name and type
@@ -62,6 +66,8 @@ class AssetService {
     batch.delete(_assetsRef.doc(assetId));
 
     await batch.commit();
+
+    await _eventService.logEvent('deleted an asset');
   }
 
   // gives us a live stream of one specific asset, so the screen updates

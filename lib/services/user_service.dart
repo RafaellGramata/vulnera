@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/app_user.dart';
+import 'event_service.dart';
 
 class UserService {
+  final EventService _eventService = EventService();
   final CollectionReference _usersRef =
       FirebaseFirestore.instance.collection('users');
 
@@ -32,5 +34,6 @@ class UserService {
   // this to actually succeed if the caller is an admin
   Future<void> updateUserRole(String uid, String newRole) async {
     await _usersRef.doc(uid).update({'role': newRole});
+    await _eventService.logEvent('changed a user\'s role to $newRole');
   }
 }
