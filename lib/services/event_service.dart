@@ -51,4 +51,20 @@ class EventService {
       'readBy': FieldValue.arrayUnion([uid]),
     });
   }
+
+  // fetches events within a date range - if either date is null,
+  // that side is unbounded (e.g. null end means "up to now")
+  Future<List<AppEvent>> getEventsInRange(DateTime? start, DateTime? end) async {
+    Query query = _eventsRef.orderBy('timestamp', descending: true);
+
+    if (start != null) {
+      query = query.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start));
+    }
+    if (end != null) {
+      query = query.where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end));
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => AppEvent.fromFirestore(doc)).toList();
+  }
 }

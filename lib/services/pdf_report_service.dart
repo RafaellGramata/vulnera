@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/asset.dart';
 import '../models/vulnerability.dart';
-import '../models/app_event.dart';
 import 'asset_service.dart';
 import 'vulnerability_service.dart';
 
@@ -37,22 +36,11 @@ class PdfReportService {
     return map;
   }
 
-  // grabs the most recent events for a short activity summary section
-  Future<List<AppEvent>> _getRecentEvents() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('events')
-        .orderBy('timestamp', descending: true)
-        .limit(10)
-        .get();
-    return snapshot.docs.map((doc) => AppEvent.fromFirestore(doc)).toList();
-  }
-
   Future<List<int>> generateReport() async {
     final pdf = pw.Document();
 
     final assets = await _assetService.getAssets().first;
     final userEmails = await _getUserEmailMap();
-    final recentEvents = await _getRecentEvents();
 
     final Map<String, List<Vulnerability>> vulnsByAsset = {};
     for (final asset in assets) {
@@ -158,28 +146,6 @@ class PdfReportService {
               }),
             ],
           ),
-          pw.SizedBox(height: 24),
-
-          // recent activity summary - gives the report context, not just a snapshot
-          pw.Text('Recent Activity', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 8),
-          if (recentEvents.isEmpty)
-            pw.Text('No recent activity recorded.', style: const pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic))
-          else
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: recentEvents.map((event) {
-                final dateStr =
-                    '${event.timestamp.month}/${event.timestamp.day} ${event.timestamp.hour}:${event.timestamp.minute.toString().padLeft(2, '0')}';
-                return pw.Padding(
-                  padding: const pw.EdgeInsets.only(bottom: 4),
-                  child: pw.Text(
-                    '$dateStr — ${event.actorEmail} ${event.message}',
-                    style: const pw.TextStyle(fontSize: 9),
-                  ),
-                );
-              }).toList(),
-            ),
           pw.SizedBox(height: 24),
 
           // per-asset breakdown
