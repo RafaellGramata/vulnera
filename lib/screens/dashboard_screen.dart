@@ -6,9 +6,12 @@ import '../models/asset.dart';
 import 'package:printing/printing.dart';
 import '../services/pdf_report_service.dart';
 import 'dart:typed_data';
+import 'scan_center_screen.dart';
+import 'website_scan_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  final String role;
+  const DashboardScreen({super.key, required this.role});
 
   // gives each severity level a consistent color across the whole app
   Color _severityColor(String severity) {
@@ -60,6 +63,28 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          if (role == 'Admin' || role == 'Analyst')
+            IconButton(
+              icon: const Icon(Icons.wifi_find),
+              tooltip: 'Network Scanner',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ScanCenterScreen(role: role)),
+                );
+              },
+            ),
+            if (role == 'Admin' || role == 'Analyst')
+            IconButton(
+              icon: const Icon(Icons.language),
+              tooltip: 'Website Scanner',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WebsiteScanScreen(role: role)),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             tooltip: 'Export PDF Report',

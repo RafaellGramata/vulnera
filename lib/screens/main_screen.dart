@@ -46,7 +46,7 @@ class _MainTabsState extends State<_MainTabs> {
   Widget build(BuildContext context) {
     final screens = [
       HomeScreen(role: widget.role),
-      const DashboardScreen(),
+      DashboardScreen(role: widget.role),
       const ActivityFeedScreen(),
     ];
 

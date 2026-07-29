@@ -37,6 +37,26 @@ class AssetService {
     await _eventService.logEvent('added a new asset: "$name"');
   }
 
+  // same as addAsset, but returns the new document's id - needed when
+  // something else (like the network scanner) needs to immediately
+  // attach vulnerabilities to the asset it just created
+  Future<String> addAssetAndReturnId(String name, String type) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    final docRef = await _assetsRef.add({
+      'name': name,
+      'type': type,
+      'ownerId': userId,
+      'riskScore': 0.0,
+      'openIssueCount': 0,
+      'createdAt': Timestamp.now(),
+    });
+
+    await _eventService.logEvent('added a new asset: "$name"');
+
+    return docRef.id;
+  }
+
   // updates an existing asset's name and type
   Future<void> updateAsset(String assetId, String name, String type) async {
     await _assetsRef.doc(assetId).update({
