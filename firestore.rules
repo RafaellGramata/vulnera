@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && getUserRole() == 'Admin';
+    }
+
+    match /assets/{assetId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && getUserRole() in ['Admin', 'Analyst'];
+      allow delete: if request.auth != null && getUserRole() == 'Admin';
+    }
+
+    match /vulnerabilities/{vulnId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && getUserRole() in ['Admin', 'Analyst'];
+      allow delete: if request.auth != null && getUserRole() == 'Admin';
+    }
+    
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      // events stay append-only for their core content, but any logged in
+      // user can update the readBy list to mark a notification as read
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+      allow delete: if false;
+    }
+  }
+}
