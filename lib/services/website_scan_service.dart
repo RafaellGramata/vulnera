@@ -15,9 +15,23 @@ class WebsiteScanService {
     if (uri.scheme == 'https') {
       try {
         final httpUri = uri.replace(scheme: 'http');
-        final httpResponse = await http.get(httpUri).timeout(const Duration(seconds: 8));
 
-        if (httpResponse.statusCode == 200) {
+        // use a raw request with redirects disabled, so we see the actual
+        // first response instead of the auto-followed final destination -
+        // http.get() follows redirects by default, which was hiding the
+        // real answer (a 200 from the https page it redirected to, not
+        // from the original http request)
+        final client = http.Client();
+        final request = http.Request('GET', httpUri)..followRedirects = false;
+        final streamedResponse = await client.send(request).timeout(const Duration(seconds: 8));
+        client.close();
+
+        // status 300-399 means the server redirected us - that's the
+        // correct, secure behavior. anything else means it served content
+        // over plain http without redirecting to https
+        final isRedirect = streamedResponse.statusCode >= 300 && streamedResponse.statusCode < 400;
+
+        if (!isRedirect) {
           findings.add(WebsiteFinding(
             title: 'HTTPS Not Enforced',
             description: 'The site responds over plain HTTP without redirecting to HTTPS, allowing traffic to be intercepted on shared networks.',
@@ -26,7 +40,7 @@ class WebsiteScanService {
           ));
         }
       } catch (e) {
-        // failing here is fine - likely means http is correctly refused
+        // request failing here is fine too - likely means http is refused outright
       }
     }
 
