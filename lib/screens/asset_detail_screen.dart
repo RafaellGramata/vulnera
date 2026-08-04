@@ -5,6 +5,7 @@ import '../services/vulnerability_service.dart';
 import 'add_edit_asset_screen.dart';
 import 'add_edit_vulnerability_screen.dart';
 import '../services/asset_service.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class AssetDetailScreen extends StatelessWidget {
   final Asset asset;
@@ -45,11 +46,13 @@ class AssetDetailScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddEditAssetScreen(existingAsset: asset),
+                    builder: (context) =>
+                        AddEditAssetScreen(existingAsset: asset),
                   ),
                 );
               },
             ),
+          const ThemeToggleButton(),
         ],
       ),
       body: Column(
@@ -75,7 +78,10 @@ class AssetDetailScreen extends StatelessWidget {
                         ),
                         Text(
                           '${liveAsset.openIssueCount} open issue${liveAsset.openIssueCount == 1 ? '' : 's'}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -110,7 +116,9 @@ class AssetDetailScreen extends StatelessWidget {
                     return Dismissible(
                       key: Key(vuln.id),
                       // only admins can delete - everyone else can't swipe this at all
-                      direction: canDelete ? DismissDirection.endToStart : DismissDirection.none,
+                      direction: canDelete
+                          ? DismissDirection.endToStart
+                          : DismissDirection.none,
                       background: Container(
                         color: Colors.red,
                         alignment: Alignment.centerRight,
@@ -165,8 +173,10 @@ class AssetDetailScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        AddEditVulnerabilityScreen(assetId: asset.id, role: role),
+                    builder: (context) => AddEditVulnerabilityScreen(
+                      assetId: asset.id,
+                      role: role,
+                    ),
                   ),
                 );
               },

@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/app_event.dart';
 
 class EventService {
-  final CollectionReference _eventsRef =
-      FirebaseFirestore.instance.collection('events');
+  final CollectionReference _eventsRef = FirebaseFirestore.instance.collection(
+    'events',
+  );
 
   // writes a new event to the feed - called from other services
   // whenever something worth logging happens.
@@ -29,8 +30,10 @@ class EventService {
         .limit(50)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => AppEvent.fromFirestore(doc)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => AppEvent.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // gives a live stream of notifications meant for a specific user
@@ -41,8 +44,10 @@ class EventService {
         .limit(20)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => AppEvent.fromFirestore(doc)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => AppEvent.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // marks a single notification as read by a specific user
@@ -54,14 +59,23 @@ class EventService {
 
   // fetches events within a date range - if either date is null,
   // that side is unbounded (e.g. null end means "up to now")
-  Future<List<AppEvent>> getEventsInRange(DateTime? start, DateTime? end) async {
+  Future<List<AppEvent>> getEventsInRange(
+    DateTime? start,
+    DateTime? end,
+  ) async {
     Query query = _eventsRef.orderBy('timestamp', descending: true);
 
     if (start != null) {
-      query = query.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start));
+      query = query.where(
+        'timestamp',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(start),
+      );
     }
     if (end != null) {
-      query = query.where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end));
+      query = query.where(
+        'timestamp',
+        isLessThanOrEqualTo: Timestamp.fromDate(end),
+      );
     }
 
     final snapshot = await query.get();

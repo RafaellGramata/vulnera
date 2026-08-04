@@ -5,8 +5,9 @@ import 'event_service.dart';
 
 class UserService {
   final EventService _eventService = EventService();
-  final CollectionReference _usersRef =
-      FirebaseFirestore.instance.collection('users');
+  final CollectionReference _usersRef = FirebaseFirestore.instance.collection(
+    'users',
+  );
 
   // gives a live stream of the currently logged in user's profile,
   // so the app updates automatically if their role ever changes

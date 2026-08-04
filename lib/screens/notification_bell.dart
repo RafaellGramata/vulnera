@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/app_event.dart';
 import '../services/event_service.dart';
-import '../screens/add_edit_vulnerability_screen.dart';
 
 class NotificationBell extends StatelessWidget {
   final String role;
@@ -27,8 +26,9 @@ class NotificationBell extends StatelessWidget {
       stream: eventService.getNotificationsForUser(uid),
       builder: (context, snapshot) {
         final notifications = snapshot.data ?? [];
-        final unreadCount =
-            notifications.where((n) => !n.readBy.contains(uid)).length;
+        final unreadCount = notifications
+            .where((n) => !n.readBy.contains(uid))
+            .length;
 
         return PopupMenuButton<void>(
           icon: Badge(
@@ -64,7 +64,9 @@ class NotificationBell extends StatelessWidget {
                   title: Text(
                     notification.message,
                     style: TextStyle(
-                      fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isUnread
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                   subtitle: Text(_timeAgo(notification.timestamp)),

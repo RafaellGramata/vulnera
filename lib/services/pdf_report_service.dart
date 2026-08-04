@@ -2,7 +2,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/asset.dart';
 import '../models/vulnerability.dart';
 import 'asset_service.dart';
 import 'vulnerability_service.dart';
@@ -44,7 +43,9 @@ class PdfReportService {
 
     final Map<String, List<Vulnerability>> vulnsByAsset = {};
     for (final asset in assets) {
-      final vulns = await _vulnService.getVulnerabilitiesForAsset(asset.id).first;
+      final vulns = await _vulnService
+          .getVulnerabilitiesForAsset(asset.id)
+          .first;
       vulnsByAsset[asset.id] = vulns;
     }
 
@@ -58,7 +59,8 @@ class PdfReportService {
       }
     }
 
-    final userEmail = FirebaseAuth.instance.currentUser?.email ?? 'Unknown user';
+    final userEmail =
+        FirebaseAuth.instance.currentUser?.email ?? 'Unknown user';
     final generatedDate = DateTime.now();
     final formattedDate =
         '${generatedDate.month}/${generatedDate.day}/${generatedDate.year} '
@@ -81,11 +83,20 @@ class PdfReportService {
               children: [
                 pw.Text(
                   'Vulnera Security Assessment Report',
-                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+                  style: pw.TextStyle(
+                    fontSize: 22,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
                 pw.SizedBox(height: 4),
-                pw.Text('Generated: $formattedDate', style: const pw.TextStyle(fontSize: 10)),
-                pw.Text('Prepared by: $userEmail', style: const pw.TextStyle(fontSize: 10)),
+                pw.Text(
+                  'Generated: $formattedDate',
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+                pw.Text(
+                  'Prepared by: $userEmail',
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
                 pw.Divider(thickness: 1),
               ],
             );
@@ -103,12 +114,17 @@ class PdfReportService {
         },
         build: (context) => [
           // summary section
-          pw.Text('Summary', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            'Summary',
+            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+          ),
           pw.SizedBox(height: 8),
           pw.Row(
             children: [
               pw.Expanded(child: pw.Text('Total Assets: ${assets.length}')),
-              pw.Expanded(child: pw.Text('Total Open Vulnerabilities: $totalOpen')),
+              pw.Expanded(
+                child: pw.Text('Total Open Vulnerabilities: $totalOpen'),
+              ),
             ],
           ),
           pw.SizedBox(height: 12),
@@ -118,10 +134,15 @@ class PdfReportService {
               pw.TableRow(
                 decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                 children: ['Severity', 'Open Count']
-                    .map((h) => pw.Padding(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Text(h, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        ))
+                    .map(
+                      (h) => pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text(
+                          h,
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
               ...severityCounts.entries.map((entry) {
@@ -131,7 +152,11 @@ class PdfReportService {
                       padding: const pw.EdgeInsets.all(6),
                       child: pw.Row(
                         children: [
-                          pw.Container(width: 10, height: 10, color: _severityColor(entry.key)),
+                          pw.Container(
+                            width: 10,
+                            height: 10,
+                            color: _severityColor(entry.key),
+                          ),
                           pw.SizedBox(width: 6),
                           pw.Text(entry.key),
                         ],
@@ -149,7 +174,10 @@ class PdfReportService {
           pw.SizedBox(height: 24),
 
           // per-asset breakdown
-          pw.Text('Asset Details', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            'Asset Details',
+            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+          ),
           pw.SizedBox(height: 12),
 
           ...assets.map((asset) {
@@ -160,17 +188,29 @@ class PdfReportService {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(asset.name, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    asset.name,
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.Text(
                     '${asset.type} · Risk Score: ${asset.riskScore.toStringAsFixed(1)} · ${asset.openIssueCount} open issue(s)',
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    style: const pw.TextStyle(
+                      fontSize: 10,
+                      color: PdfColors.grey700,
+                    ),
                   ),
                   pw.SizedBox(height: 6),
 
                   if (vulns.isEmpty)
                     pw.Text(
                       'No vulnerabilities recorded for this asset.',
-                      style: const pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic),
+                      style: const pw.TextStyle(
+                        fontSize: 10,
+                        fontStyle: pw.FontStyle.italic,
+                      ),
                     )
                   else
                     pw.Table(
@@ -184,37 +224,71 @@ class PdfReportService {
                       },
                       children: [
                         pw.TableRow(
-                          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                          children: ['Title', 'Severity', 'CVSS', 'Status', 'Assigned To']
-                              .map((h) => pw.Padding(
-                                    padding: const pw.EdgeInsets.all(5),
-                                    child: pw.Text(h, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                                  ))
-                              .toList(),
+                          decoration: const pw.BoxDecoration(
+                            color: PdfColors.grey200,
+                          ),
+                          children:
+                              [
+                                    'Title',
+                                    'Severity',
+                                    'CVSS',
+                                    'Status',
+                                    'Assigned To',
+                                  ]
+                                  .map(
+                                    (h) => pw.Padding(
+                                      padding: const pw.EdgeInsets.all(5),
+                                      child: pw.Text(
+                                        h,
+                                        style: pw.TextStyle(
+                                          fontWeight: pw.FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
                         ),
                         ...vulns.map((v) {
                           return pw.TableRow(
                             children: [
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
-                                child: pw.Text(v.title, style: const pw.TextStyle(fontSize: 10)),
+                                child: pw.Text(
+                                  v.title,
+                                  style: const pw.TextStyle(fontSize: 10),
+                                ),
                               ),
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
-                                child: pw.Text(v.severity,
-                                    style: pw.TextStyle(fontSize: 10, color: _severityColor(v.severity))),
+                                child: pw.Text(
+                                  v.severity,
+                                  style: pw.TextStyle(
+                                    fontSize: 10,
+                                    color: _severityColor(v.severity),
+                                  ),
+                                ),
                               ),
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
-                                child: pw.Text(v.cvssScore.toStringAsFixed(1), style: const pw.TextStyle(fontSize: 10)),
+                                child: pw.Text(
+                                  v.cvssScore.toStringAsFixed(1),
+                                  style: const pw.TextStyle(fontSize: 10),
+                                ),
                               ),
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
-                                child: pw.Text(v.status, style: const pw.TextStyle(fontSize: 10)),
+                                child: pw.Text(
+                                  v.status,
+                                  style: const pw.TextStyle(fontSize: 10),
+                                ),
                               ),
                               pw.Padding(
                                 padding: const pw.EdgeInsets.all(5),
-                                child: pw.Text(assigneeLabel(v.assignedTo), style: const pw.TextStyle(fontSize: 9)),
+                                child: pw.Text(
+                                  assigneeLabel(v.assignedTo),
+                                  style: const pw.TextStyle(fontSize: 9),
+                                ),
                               ),
                             ],
                           );

@@ -5,11 +5,7 @@ class AppUser {
   final String email;
   final String role;
 
-  AppUser({
-    required this.uid,
-    required this.email,
-    required this.role,
-  });
+  AppUser({required this.uid, required this.email, required this.role});
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;

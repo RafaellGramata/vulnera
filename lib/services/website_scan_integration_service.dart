@@ -9,7 +9,9 @@ class WebsiteScanIntegrationService {
   Future<void> importFindings(String url, List<WebsiteFinding> findings) async {
     // clean up the url into a shorter display name for the asset
     var displayName = url.trim();
-    displayName = displayName.replaceAll('https://', '').replaceAll('http://', '');
+    displayName = displayName
+        .replaceAll('https://', '')
+        .replaceAll('http://', '');
     if (displayName.endsWith('/')) {
       displayName = displayName.substring(0, displayName.length - 1);
     }

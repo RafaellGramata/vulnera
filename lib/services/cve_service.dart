@@ -45,11 +45,6 @@ class CveService {
       headers['apiKey'] = _apiKey;
     }
 
-    // temporary debug lines
-    print('Requesting URL: $url');
-    print('API key length: ${_apiKey.length}');
-    print('Headers: $headers');
-
     http.Response response;
     try {
       response = await http
@@ -79,7 +74,7 @@ class CveService {
     // grab the english description
     final descriptions = cve['descriptions'] as List;
     final englishDescription = descriptions.firstWhere(
-          (d) => d['lang'] == 'en',
+      (d) => d['lang'] == 'en',
       orElse: () => {'value': 'No description available.'},
     );
 
@@ -129,7 +124,9 @@ class CveService {
 
     http.Response response;
     try {
-      response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+      response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
     } catch (e) {
       throw CveLookupException('network');
     }

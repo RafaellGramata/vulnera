@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/app_user.dart';
 import '../services/user_service.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class ManageUsersScreen extends StatelessWidget {
   const ManageUsersScreen({super.key});
@@ -23,7 +24,10 @@ class ManageUsersScreen extends StatelessWidget {
     final userService = UserService();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Users')),
+      appBar: AppBar(
+        title: const Text('Manage users'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: StreamBuilder<List<AppUser>>(
         stream: userService.getAllUsers(),
         builder: (context, snapshot) {
@@ -37,46 +41,65 @@ class ManageUsersScreen extends StatelessWidget {
             return const Center(child: Text('No users found.'));
           }
 
-          return ListView.builder(
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             itemCount: users.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final user = users[index];
 
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: _roleColor(user.role),
-                  child: Text(
-                    user.email.isNotEmpty ? user.email[0].toUpperCase() : '?',
-                    style: const TextStyle(color: Colors.white),
+              return Card(
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 7,
                   ),
-                ),
-                title: Text(user.email),
-                // dropdown lets an admin change this user's role directly
-                trailing: DropdownButton<String>(
-                  value: user.role,
-                  items: _roles.map((role) {
-                    return DropdownMenuItem(value: role, child: Text(role));
-                  }).toList(),
-                  onChanged: (newRole) async {
-                    if (newRole == null || newRole == user.role) return;
+                  leading: CircleAvatar(
+                    backgroundColor: _roleColor(user.role),
+                    child: Text(
+                      user.email.isNotEmpty ? user.email[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    user.email,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text('Access level: ${user.role}'),
+                  trailing: DropdownButton<String>(
+                    value: user.role,
+                    underline: const SizedBox.shrink(),
+                    items: _roles.map((role) {
+                      return DropdownMenuItem(value: role, child: Text(role));
+                    }).toList(),
+                    onChanged: (newRole) async {
+                      if (newRole == null || newRole == user.role) return;
 
-                    try {
-                      await userService.updateUserRole(user.uid, newRole);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${user.email} is now $newRole')),
-                        );
+                      try {
+                        await userService.updateUserRole(user.uid, newRole);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${user.email} is now $newRole'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Failed to update role. Admin access required.',
+                              ),
+                            ),
+                          );
+                        }
                       }
-                    } catch (e) {
-                      // this will happen if firestore rules reject the update -
-                      // e.g. if the current logged in user somehow isn't actually an admin
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to update role. Admin access required.')),
-                        );
-                      }
-                    }
-                  },
+                    },
+                  ),
                 ),
               );
             },

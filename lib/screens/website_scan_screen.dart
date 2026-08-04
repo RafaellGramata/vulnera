@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/website_scan_service.dart';
 import '../services/website_scan_integration_service.dart';
 import '../models/website_finding.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class WebsiteScanScreen extends StatefulWidget {
   final String role;
@@ -65,7 +66,10 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
       _isScanning = true;
     });
 
-    await _integrationService.importFindings(_urlController.text.trim(), _lastFindings!);
+    await _integrationService.importFindings(
+      _urlController.text.trim(),
+      _lastFindings!,
+    );
 
     setState(() {
       _isScanning = false;
@@ -75,7 +79,9 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Findings added as an asset and vulnerabilities.')),
+        const SnackBar(
+          content: Text('Findings added as an asset and vulnerabilities.'),
+        ),
       );
     }
   }
@@ -89,9 +95,12 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Website Security Scanner')),
+      appBar: AppBar(
+        title: const Text('Website scanner'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         child: !_canScan
             ? const Center(
                 child: Text(
@@ -115,13 +124,14 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
                           readOnly: _isScanning,
                           decoration: const InputDecoration(
                             labelText: 'Website URL (e.g. example.com)',
+                            prefixIcon: Icon(Icons.link_rounded),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       _isScanning
                           ? const CircularProgressIndicator()
-                          : ElevatedButton(
+                          : FilledButton(
                               onPressed: _handleScan,
                               child: const Text('Scan'),
                             ),
@@ -130,7 +140,10 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 12.0),
-                      child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                     ),
                   const SizedBox(height: 24),
                   if (_lastFindings != null) ...[
@@ -149,10 +162,15 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
                           return Card(
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: _severityColor(finding.severity),
+                                backgroundColor: _severityColor(
+                                  finding.severity,
+                                ),
                                 child: Text(
                                   finding.cvssScore.toStringAsFixed(1),
-                                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ),
                               title: Text(finding.title),
@@ -166,7 +184,7 @@ class _WebsiteScanScreenState extends State<WebsiteScanScreen> {
                     if (_lastFindings!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 16.0),
-                        child: ElevatedButton.icon(
+                        child: FilledButton.icon(
                           onPressed: _handleImport,
                           icon: const Icon(Icons.add_task),
                           label: const Text('Add as Asset'),

@@ -6,17 +6,17 @@ import 'event_service.dart';
 class AssetService {
   final EventService _eventService = EventService();
   // this points at the "assets" collection in firestore
-  final CollectionReference _assetsRef =
-  FirebaseFirestore.instance.collection('assets');
+  final CollectionReference _assetsRef = FirebaseFirestore.instance.collection(
+    'assets',
+  );
 
   // gives us a live stream of all assets, shared across every logged in user -
   // ownerId is kept on each document just to record who originally created it,
   // but it no longer restricts who can see it
   Stream<List<Asset>> getAssets() {
-    return _assetsRef
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
+    return _assetsRef.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs.map((doc) => Asset.fromFirestore(doc)).toList();
     });
   }
@@ -59,13 +59,10 @@ class AssetService {
 
   // updates an existing asset's name and type
   Future<void> updateAsset(String assetId, String name, String type) async {
-    await _assetsRef.doc(assetId).update({
-      'name': name,
-      'type': type,
-    });
+    await _assetsRef.doc(assetId).update({'name': name, 'type': type});
   }
 
-// deletes an asset from firestore, along with all of its vulnerabilities
+  // deletes an asset from firestore, along with all of its vulnerabilities
   // so we never leave orphaned data behind
   Future<void> deleteAsset(String assetId) async {
     // find every vulnerability that belongs to this asset

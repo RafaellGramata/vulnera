@@ -21,10 +21,10 @@ class AuthService {
           .collection('users')
           .doc(credential.user!.uid)
           .set({
-        'email': email,
-        'role': 'Viewer',
-        'createdAt': Timestamp.now(),
-      });
+            'email': email,
+            'role': 'Viewer',
+            'createdAt': Timestamp.now(),
+          });
 
       return null; // null means no error
     } on FirebaseAuthException catch (e) {
@@ -35,10 +35,7 @@ class AuthService {
   // logs in an existing user
   Future<String?> logIn(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;

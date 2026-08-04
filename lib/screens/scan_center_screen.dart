@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/network_scan_service.dart';
 import '../services/scan_integration_service.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class ScanCenterScreen extends StatefulWidget {
   final String role;
@@ -39,7 +40,8 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
     if (subnet == null) {
       setState(() {
         _isScanning = false;
-        _errorMessage = 'Could not detect your network. Make sure you are connected to Wi-Fi.';
+        _errorMessage =
+            'Could not detect your network. Make sure you are connected to Wi-Fi.';
       });
       return;
     }
@@ -85,7 +87,9 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scan results imported as assets and vulnerabilities.')),
+        const SnackBar(
+          content: Text('Scan results imported as assets and vulnerabilities.'),
+        ),
       );
     }
   }
@@ -93,9 +97,12 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Network Scanner')),
+      appBar: AppBar(
+        title: const Text('Network scanner'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         child: !_canScan
             ? const Center(
                 child: Text(
@@ -115,11 +122,14 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                     ),
 
                   if (!_isScanning)
-                    ElevatedButton.icon(
+                    FilledButton.icon(
                       onPressed: _handleScan,
                       icon: const Icon(Icons.wifi_find),
                       label: const Text('Scan Network'),
@@ -130,15 +140,22 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
                     Text(_statusMessage),
                     const SizedBox(height: 12),
                     if (_totalCount > 0)
-                      LinearProgressIndicator(value: _scannedCount / _totalCount)
+                      LinearProgressIndicator(
+                        value: _scannedCount / _totalCount,
+                      )
                     else
                       const LinearProgressIndicator(),
                     const SizedBox(height: 8),
                     if (_totalCount > 0)
-                      Text('$_scannedCount / $_totalCount addresses checked', style: const TextStyle(fontSize: 12)),
+                      Text(
+                        '$_scannedCount / $_totalCount addresses checked',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                   ],
 
-                  if (!_isScanning && _statusMessage.isNotEmpty && _lastResults == null)
+                  if (!_isScanning &&
+                      _statusMessage.isNotEmpty &&
+                      _lastResults == null)
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
                       child: Text(_statusMessage),
@@ -146,7 +163,10 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
 
                   if (_lastResults != null && _lastResults!.isNotEmpty) ...[
                     const SizedBox(height: 24),
-                    Text(_statusMessage, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      _statusMessage,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: ListView.builder(
@@ -156,19 +176,40 @@ class _ScanCenterScreenState extends State<ScanCenterScreen> {
                           final ports = _lastResults![ip]!;
                           return Card(
                             child: ListTile(
-                              leading: const Icon(Icons.devices_other),
-                              title: Text(ip),
-                              subtitle: Text('Open ports: ${ports.join(", ")}'),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 7,
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
+                                child: Icon(
+                                  Icons.router_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                              title: Text(
+                                ip,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Open ports  •  ${ports.join(", ")}',
+                              ),
                             ),
                           );
                         },
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton.icon(
+                    FilledButton.icon(
                       onPressed: _handleImport,
                       icon: const Icon(Icons.add_task),
-                      label: Text('Add ${_lastResults!.length} Device(s) as Assets'),
+                      label: Text(
+                        'Add ${_lastResults!.length} Device(s) as Assets',
+                      ),
                     ),
                   ],
 
