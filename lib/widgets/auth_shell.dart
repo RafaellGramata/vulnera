@@ -53,13 +53,11 @@ class AuthShell extends StatelessWidget {
                                 width: 64,
                                 height: 64,
                                 decoration: BoxDecoration(
-                                  color: colors.primary,
                                   borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Icon(
-                                  Icons.security_rounded,
-                                  color: Colors.white,
-                                  size: 34,
+                                  image: const DecorationImage(
+                                    image: AssetImage('assets/vulnera.png'),
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
