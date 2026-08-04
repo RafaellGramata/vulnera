@@ -9,8 +9,6 @@ class UserService {
     'users',
   );
 
-  // gives a live stream of the currently logged in user's profile,
-  // so the app updates automatically if their role ever changes
   Stream<AppUser?> getCurrentUserProfile() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
@@ -24,17 +22,13 @@ class UserService {
     });
   }
 
-  // gives a live stream of every user, so an admin can manage roles
   Stream<List<AppUser>> getAllUsers() {
     return _usersRef.orderBy('email').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => AppUser.fromFirestore(doc)).toList();
     });
   }
 
-  // updates a specific user's role - firestore rules only allow
-  // this to actually succeed if the caller is an admin
   Future<void> updateUserRole(String uid, String newRole) async {
-    // grab the user's email first so the event log can name them specifically
     final userDoc = await _usersRef.doc(uid).get();
     final userData = userDoc.data() as Map<String, dynamic>?;
     final targetEmail = userData?['email'] ?? 'a user';

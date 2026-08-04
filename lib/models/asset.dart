@@ -19,7 +19,6 @@ class Asset {
     required this.createdAt,
   });
 
-  // turns a firestore document into an asset object we can use in dart
   factory Asset.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Asset(
@@ -27,14 +26,12 @@ class Asset {
       name: data['name'] ?? '',
       type: data['type'] ?? '',
       ownerId: data['ownerId'] ?? '',
-      // riskScore might come back as an int or double from firestore, so we convert safely
       riskScore: (data['riskScore'] ?? 0).toDouble(),
       openIssueCount: (data['openIssueCount'] ?? 0).toInt(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  // turns an asset object into a map so we can save it to firestore
   Map<String, dynamic> toMap() {
     return {
       'name': name,

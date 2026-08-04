@@ -13,7 +13,6 @@ class AssetDetailScreen extends StatelessWidget {
 
   const AssetDetailScreen({super.key, required this.asset, required this.role});
 
-  // gives each severity level a color, so the list is easier to scan visually
   Color _severityColor(String severity) {
     switch (severity) {
       case 'Critical':
@@ -38,7 +37,6 @@ class AssetDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(asset.name),
         actions: [
-          // edit icon opens the asset edit form - only admins and analysts see it
           if (canEdit)
             IconButton(
               icon: const Icon(Icons.edit),
@@ -60,7 +58,6 @@ class AssetDetailScreen extends StatelessWidget {
           StreamBuilder<Asset>(
             stream: assetService.getAssetById(asset.id),
             builder: (context, snapshot) {
-              // while waiting for fresh data, fall back to the asset we were given
               final liveAsset = snapshot.data ?? asset;
 
               return Padding(
@@ -91,7 +88,6 @@ class AssetDetailScreen extends StatelessWidget {
             },
           ),
           const Divider(),
-          // streambuilder listens to the live list of vulnerabilities for this asset
           Expanded(
             child: StreamBuilder<List<Vulnerability>>(
               stream: vulnService.getVulnerabilitiesForAsset(asset.id),
@@ -115,7 +111,6 @@ class AssetDetailScreen extends StatelessWidget {
 
                     return Dismissible(
                       key: Key(vuln.id),
-                      // only admins can delete - everyone else can't swipe this at all
                       direction: canDelete
                           ? DismissDirection.endToStart
                           : DismissDirection.none,
@@ -166,7 +161,6 @@ class AssetDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      // only admins and analysts can add new vulnerabilities
       floatingActionButton: canEdit
           ? FloatingActionButton(
               onPressed: () {
